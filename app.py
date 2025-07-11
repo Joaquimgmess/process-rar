@@ -50,16 +50,19 @@ def process_files(rar_url):
         rar_path = os.path.join(temp_dir, 'downloaded.rar')
         download_file(rar_url, rar_path)
         with rarfile.RarFile(rar_path) as rf:
-            rf.extractall(public_extract_path)
             extracted_files = []
-            for file in os.listdir(public_extract_path):
-                file_path = os.path.join(public_extract_path, file)
-                file_size = os.path.getsize(file_path)
-                safe_name = secure_filename(file)
+            for info in rf.infolist():
+                if info.is_dir():
+                    continue
+                safe_name = secure_filename(os.path.basename(info.filename))
+                dest_path = os.path.join(public_extract_path, safe_name)
+                with rf.open(info) as source, open(dest_path, 'wb') as target:
+                    shutil.copyfileobj(source, target)
+                file_size = os.path.getsize(dest_path)
                 file_id = hashlib.sha256(safe_name.encode()).hexdigest()[:16]
                 extracted_files.append({
-                    "name": file,
-                    "path": file,
+                    "name": info.filename,
+                    "path": safe_name,
                     "size": file_size,
                     "file_id": file_id,
                     "download_url": f"/public/{extract_id}/{file_id}"
