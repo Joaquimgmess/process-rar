@@ -3,6 +3,7 @@ import requests
 import uuid
 import shutil
 import rarfile
+rarfile.UNRAR_TOOL = "bsdtar"
 import logging
 import time
 import hashlib
